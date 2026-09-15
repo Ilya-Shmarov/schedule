@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Расписание ИДБ-23-01</title>
-  <meta name="description" content="Интерактивное расписание занятий группы ИДБ-23-01" />
+  <meta name="description" content="Интерактивное расписание занятий группы ИДБ-23-01 по датам" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -35,9 +35,19 @@
 
   <main>
     <section class="controls">
-      <nav class="day-tabs" id="dayTabs" role="tablist" aria-label="Дни недели">
-        <span class="day-tab-indicator" id="dayIndicator"></span>
-      </nav>
+      <div class="date-nav">
+        <button class="nav-arrow" id="prevDay" aria-label="Предыдущий день">‹</button>
+
+        <div class="date-strip" id="dateStrip" role="tablist" aria-label="Даты"></div>
+
+        <button class="nav-arrow" id="nextDay" aria-label="Следующий день">›</button>
+
+        <div class="date-pick-wrap">
+          <input type="date" id="datePicker" aria-label="Выбрать дату" />
+        </div>
+
+        <button class="today-btn" id="todayBtn" type="button">Сегодня</button>
+      </div>
 
       <div class="filters">
         <div class="search-wrap">
@@ -57,7 +67,7 @@
     </section>
 
     <section class="day-heading">
-      <h2 id="activeDayTitle">Понедельник</h2>
+      <h2 id="activeDayTitle">—</h2>
       <span class="today-pill" id="todayPill" hidden>Сегодня</span>
     </section>
 

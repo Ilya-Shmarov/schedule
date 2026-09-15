@@ -5,13 +5,20 @@
     "Лабораторная": "var(--lab)",
   };
 
-  const WEEKS_LABEL = {
-    every: "Каждую неделю",
-    alt: "Через неделю",
-  };
+  const WEEKDAY_SHORT = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+  const WEEKDAY_FULL = [
+    "Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота",
+  ];
+  const MONTH_FULL = [
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря",
+  ];
 
-  const dayTabsEl = document.getElementById("dayTabs");
-  const dayIndicator = document.getElementById("dayIndicator");
+  const dateStripEl = document.getElementById("dateStrip");
+  const prevDayBtn = document.getElementById("prevDay");
+  const nextDayBtn = document.getElementById("nextDay");
+  const todayBtn = document.getElementById("todayBtn");
+  const datePicker = document.getElementById("datePicker");
   const timelineEl = document.getElementById("timeline");
   const activeDayTitle = document.getElementById("activeDayTitle");
   const todayPill = document.getElementById("todayPill");
@@ -22,47 +29,82 @@
 
   groupNameEl.textContent = GROUP_NAME;
 
-  // JS: Sunday=0 ... Saturday=6. Our DAYS: Mon=0 ... Sat=5.
-  const jsDayToOurDay = (jsDay) => (jsDay === 0 ? null : jsDay - 1);
-  const todayIndex = jsDayToOurDay(new Date().getDay());
+  function toISO(dt) {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
 
-  let activeDay = todayIndex !== null ? todayIndex : 0;
+  function fromISO(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function addDays(iso, n) {
+    const dt = fromISO(iso);
+    dt.setDate(dt.getDate() + n);
+    return toISO(dt);
+  }
+
+  const todayISO = toISO(new Date());
+
+  const lessonDates = LESSONS.map((l) => l.date);
+  const minDate = lessonDates.reduce((a, b) => (a < b ? a : b));
+  const maxDate = lessonDates.reduce((a, b) => (a > b ? a : b));
+
+  const lessonsByDate = {};
+  LESSONS.forEach((l) => {
+    (lessonsByDate[l.date] = lessonsByDate[l.date] || []).push(l);
+  });
+
+  function clamp(iso) {
+    if (iso < minDate) return minDate;
+    if (iso > maxDate) return maxDate;
+    return iso;
+  }
+
+  let selectedDate = clamp(todayISO);
   let activeSubgroup = "all";
   let searchQuery = "";
 
-  function buildDayTabs() {
-    DAYS.forEach((day, i) => {
-      const count = SCHEDULE.filter((l) => l.day === i).length;
+  datePicker.min = minDate;
+  datePicker.max = maxDate;
+
+  function buildDateStrip() {
+    dateStripEl.innerHTML = "";
+    const windowSize = 9;
+    const half = Math.floor(windowSize / 2);
+    for (let i = -half; i <= half; i++) {
+      const iso = addDays(selectedDate, i);
+      const dt = fromISO(iso);
+      const hasLessons = Boolean(lessonsByDate[iso]);
+
       const btn = document.createElement("button");
-      btn.className = "day-tab";
+      btn.className = "date-chip";
       btn.type = "button";
-      btn.dataset.day = i;
+      btn.dataset.date = iso;
       btn.setAttribute("role", "tab");
-      btn.innerHTML = `${day.slice(0, 3)}<span class="count">${count}</span>`;
+      if (iso === selectedDate) btn.classList.add("active");
+      if (iso === todayISO) btn.classList.add("is-today");
+      if (iso < minDate || iso > maxDate) btn.classList.add("out-of-range");
+
+      btn.innerHTML = `
+        <span class="chip-weekday">${WEEKDAY_SHORT[dt.getDay()]}</span>
+        <span class="chip-day">${dt.getDate()}</span>
+        <span class="chip-dot" ${hasLessons ? "" : "hidden"}></span>
+      `;
       btn.addEventListener("click", () => {
-        activeDay = i;
+        selectedDate = iso;
         render();
       });
-      dayTabsEl.appendChild(btn);
-    });
-  }
-
-  function moveIndicator() {
-    const activeBtn = dayTabsEl.querySelector(`.day-tab[data-day="${activeDay}"]`);
-    if (!activeBtn) return;
-    dayIndicator.style.width = activeBtn.offsetWidth + "px";
-    dayIndicator.style.transform = `translateX(${activeBtn.offsetLeft - 6}px)`;
-  }
-
-  function updateTabStates() {
-    dayTabsEl.querySelectorAll(".day-tab").forEach((btn) => {
-      btn.classList.toggle("active", Number(btn.dataset.day) === activeDay);
-    });
+      dateStripEl.appendChild(btn);
+    }
   }
 
   function currentSlotInfo() {
+    if (selectedDate !== todayISO) return { nowSlot: -1 };
     const now = new Date();
-    if (todayIndex === null || activeDay !== todayIndex) return { nowSlot: -1 };
     const mins = now.getHours() * 60 + now.getMinutes();
     const slotRanges = [
       [510, 605], [615, 710], [740, 835], [845, 940],
@@ -105,28 +147,28 @@
       <div class="card-meta">
         <span>👤 ${lesson.teacher}</span>
         <span>🚪 ${lesson.room}</span>
-        <span>🔁 ${WEEKS_LABEL[lesson.weeks]}</span>
       </div>
-      <div class="card-dates">📅 ${lesson.dates}</div>
     `;
     return card;
   }
 
   function render() {
-    updateTabStates();
-    moveIndicator();
-    activeDayTitle.textContent = DAYS[activeDay];
-    todayPill.hidden = activeDay !== todayIndex;
+    buildDateStrip();
+    datePicker.value = selectedDate;
+
+    const dt = fromISO(selectedDate);
+    activeDayTitle.textContent = `${WEEKDAY_FULL[dt.getDay()]}, ${dt.getDate()} ${MONTH_FULL[dt.getMonth()]}`;
+    todayPill.hidden = selectedDate !== todayISO;
 
     timelineEl.innerHTML = "";
     const { nowSlot } = currentSlotInfo();
 
-    const lessonsForDay = SCHEDULE.filter((l) => l.day === activeDay).filter(lessonMatches);
+    const allForDate = lessonsByDate[selectedDate] || [];
+    const lessonsForDate = allForDate.filter(lessonMatches);
 
-    if (lessonsForDay.length === 0) {
-      const allForDayIgnoringFilter = SCHEDULE.filter((l) => l.day === activeDay);
-      emptyState.hidden = allForDayIgnoringFilter.length !== 0;
-      if (allForDayIgnoringFilter.length === 0) {
+    if (lessonsForDate.length === 0) {
+      emptyState.hidden = allForDate.length === 0;
+      if (allForDate.length === 0) {
         const free = document.createElement("div");
         free.className = "day-free";
         free.textContent = "В этот день пар нет 🎉";
@@ -137,7 +179,7 @@
     emptyState.hidden = true;
 
     const bySlot = {};
-    lessonsForDay.forEach((l) => {
+    lessonsForDate.forEach((l) => {
       (bySlot[l.slot] = bySlot[l.slot] || []).push(l);
     });
 
@@ -194,9 +236,28 @@
     });
   });
 
-  window.addEventListener("resize", moveIndicator);
+  prevDayBtn.addEventListener("click", () => {
+    selectedDate = addDays(selectedDate, -1);
+    render();
+  });
 
-  buildDayTabs();
+  nextDayBtn.addEventListener("click", () => {
+    selectedDate = addDays(selectedDate, 1);
+    render();
+  });
+
+  todayBtn.addEventListener("click", () => {
+    selectedDate = clamp(todayISO);
+    render();
+  });
+
+  datePicker.addEventListener("change", (e) => {
+    if (e.target.value) {
+      selectedDate = clamp(e.target.value);
+      render();
+    }
+  });
+
   render();
   tickClock();
   setInterval(tickClock, 30000);
