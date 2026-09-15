@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Расписание ИДБ-23-01</title>
+  <meta name="description" content="Интерактивное расписание занятий группы ИДБ-23-01" />
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="blobs" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+    <span class="blob blob-4"></span>
+  </div>
+
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">📚</span>
+      <div class="brand-text">
+        <h1>Расписание</h1>
+        <p id="groupName">ИДБ-23-01</p>
+      </div>
+    </div>
+
+    <div class="clock" id="clock">
+      <span id="clockTime">--:--</span>
+      <span id="clockDate">—</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls">
+      <nav class="day-tabs" id="dayTabs" role="tablist" aria-label="Дни недели">
+        <span class="day-tab-indicator" id="dayIndicator"></span>
+      </nav>
+
+      <div class="filters">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" width="16" height="16">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Поиск: предмет, преподаватель, аудитория…" autocomplete="off" />
+        </div>
+
+        <div class="subgroup-toggle" id="subgroupToggle" role="group" aria-label="Подгруппа">
+          <button class="sg-btn active" data-sg="all">Все</button>
+          <button class="sg-btn" data-sg="А">Подгруппа А</button>
+          <button class="sg-btn" data-sg="Б">Подгруппа Б</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="day-heading">
+      <h2 id="activeDayTitle">Понедельник</h2>
+      <span class="today-pill" id="todayPill" hidden>Сегодня</span>
+    </section>
+
+    <section class="timeline" id="timeline"></section>
+
+    <p class="empty-state" id="emptyState" hidden>Занятий не найдено 🌤️</p>
+  </main>
+
+  <footer>
+    <p>Сделано на основе учебного расписания · автообновляемый статический сайт</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
