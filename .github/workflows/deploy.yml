@@ -27,6 +27,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Cache-bust local assets
+        run: |
+          v="${{ github.sha }}"
+          sed -i \
+            -e "s/style\.css\"/style.css?v=${v}\"/" \
+            -e "s/data\.js\"/data.js?v=${v}\"/" \
+            -e "s/script\.js\"/script.js?v=${v}\"/" \
+            index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
