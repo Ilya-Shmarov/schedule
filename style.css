@@ -254,19 +254,31 @@ main {
   border-radius: 18px;
   padding: 6px;
   backdrop-filter: blur(14px);
-  overflow-x: auto;
-  scrollbar-width: none;
   flex: 1;
   min-width: 0;
 }
-.date-strip::-webkit-scrollbar { display: none; }
+
+.week-indicator {
+  position: absolute;
+  top: 6px; left: 6px;
+  height: calc(100% - 12px);
+  width: 0;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 6px 18px rgba(109, 91, 246, 0.4);
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), width 0.35s cubic-bezier(.22,1,.36,1), opacity 0.2s ease;
+  z-index: 0;
+  opacity: 0;
+}
 
 .date-chip {
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  flex: 1;
   border: none;
   background: transparent;
   color: var(--text-dim);
@@ -276,10 +288,9 @@ main {
   border-radius: 13px;
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.25s ease, background 0.25s ease;
+  transition: color 0.25s ease;
   font-family: inherit;
-  flex-shrink: 0;
-  min-width: 46px;
+  min-width: 0;
 }
 
 .date-chip .chip-day {
@@ -304,9 +315,7 @@ main {
 }
 
 .date-chip.active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: var(--tab-active-text);
-  box-shadow: 0 6px 18px rgba(109, 91, 246, 0.4);
 }
 
 .date-chip.active .chip-dot {
@@ -570,6 +579,17 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.card-meta .counter {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--pill-bg);
+  border: 1px solid var(--border-soft);
+  padding: 3px 9px;
+  border-radius: 999px;
 }
 
 .card-dates {

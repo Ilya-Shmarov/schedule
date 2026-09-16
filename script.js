@@ -15,6 +15,7 @@
   ];
 
   const dateStripEl = document.getElementById("dateStrip");
+  const weekIndicator = document.getElementById("weekIndicator");
   const prevDayBtn = document.getElementById("prevDay");
   const nextDayBtn = document.getElementById("nextDay");
   const todayBtn = document.getElementById("todayBtn");
@@ -71,12 +72,39 @@
   datePicker.min = minDate;
   datePicker.max = maxDate;
 
-  function buildDateStrip() {
-    dateStripEl.innerHTML = "";
-    const windowSize = 9;
-    const half = Math.floor(windowSize / 2);
-    for (let i = -half; i <= half; i++) {
-      const iso = addDays(selectedDate, i);
+  // Считаем порядковый номер каждого занятия в его серии (например,
+  // "Лекция 5 из 12"), группируя по предмету + типу + подгруппе + преподавателю.
+  (function computeSeriesCounters() {
+    const groups = {};
+    LESSONS.forEach((l) => {
+      const key = `${l.subject}|${l.type}|${l.subgroup || ""}|${l.teacher}`;
+      (groups[key] = groups[key] || []).push(l);
+    });
+    Object.values(groups).forEach((group) => {
+      group.sort((a, b) => (a.date === b.date ? a.slot - b.slot : a.date < b.date ? -1 : 1));
+      group.forEach((l, i) => {
+        l.seriesIndex = i + 1;
+        l.seriesTotal = group.length;
+      });
+    });
+  })();
+
+  function mondayOf(iso) {
+    const dt = fromISO(iso);
+    const day = dt.getDay(); // 0=Вс .. 6=Сб
+    const offset = day === 0 ? -6 : 1 - day;
+    return addDays(iso, offset);
+  }
+
+  // Статичная строка Пн–Пт: сами колонки не "едут" при навигации,
+  // меняется только неделя целиком (при переходе в другую неделю) —
+  // единственный динамичный элемент — скользящий индикатор выбранного дня.
+  function buildWeekRow() {
+    dateStripEl.querySelectorAll(".date-chip").forEach((el) => el.remove());
+    const monday = mondayOf(selectedDate);
+
+    for (let i = 0; i < 5; i++) {
+      const iso = addDays(monday, i);
       const dt = fromISO(iso);
       const hasLessons = Boolean(lessonsByDate[iso]);
 
@@ -100,6 +128,19 @@
       });
       dateStripEl.appendChild(btn);
     }
+
+    moveWeekIndicator();
+  }
+
+  function moveWeekIndicator() {
+    const activeBtn = dateStripEl.querySelector(".date-chip.active");
+    if (!activeBtn) {
+      weekIndicator.style.opacity = "0";
+      return;
+    }
+    weekIndicator.style.opacity = "1";
+    weekIndicator.style.width = activeBtn.offsetWidth + "px";
+    weekIndicator.style.transform = `translateX(${activeBtn.offsetLeft}px)`;
   }
 
   function currentSlotInfo() {
@@ -147,13 +188,14 @@
       <div class="card-meta">
         <span>👤 ${lesson.teacher}</span>
         <span>🚪 ${lesson.room}</span>
+        <span class="counter">📊 ${lesson.seriesIndex} из ${lesson.seriesTotal}</span>
       </div>
     `;
     return card;
   }
 
   function render() {
-    buildDateStrip();
+    buildWeekRow();
     datePicker.value = selectedDate;
 
     const dt = fromISO(selectedDate);
@@ -257,6 +299,8 @@
       render();
     }
   });
+
+  window.addEventListener("resize", moveWeekIndicator);
 
   render();
   tickClock();
