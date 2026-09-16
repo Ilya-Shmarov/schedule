@@ -96,14 +96,14 @@
     return addDays(iso, offset);
   }
 
-  // Статичная строка Пн–Пт: сами колонки не "едут" при навигации,
+  // Статичная строка Пн–Сб: сами колонки не "едут" при навигации,
   // меняется только неделя целиком (при переходе в другую неделю) —
   // единственный динамичный элемент — скользящий индикатор выбранного дня.
   function buildWeekRow() {
     dateStripEl.querySelectorAll(".date-chip").forEach((el) => el.remove());
     const monday = mondayOf(selectedDate);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const iso = addDays(monday, i);
       const dt = fromISO(iso);
       const hasLessons = Boolean(lessonsByDate[iso]);
